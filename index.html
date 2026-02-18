@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>CRM Lookup</title>
+
+<style>
+
+body{
+font-family:Segoe UI;
+background:#f4f6fb;
+text-align:center;
+padding-top:50px;
+}
+
+input{
+padding:15px;
+width:260px;
+font-size:18px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+padding:15px 28px;
+font-size:18px;
+background:#4f46e5;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+margin-left:10px;
+}
+
+.card{
+background:white;
+width:650px;
+margin:40px auto;
+padding:30px;
+border-radius:14px;
+box-shadow:0 15px 40px rgba(0,0,0,0.08);
+}
+
+.vip{
+color:#c59d00;
+font-weight:bold;
+font-size:22px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th{
+background:#4f46e5;
+color:white;
+padding:12px;
+}
+
+td{
+padding:12px;
+border-bottom:1px solid #eee;
+}
+
+</style>
+
+</head>
+
+<body style="display:none">
+
+<script>
+const COMPANY_PASS="Hear@321";
+let user=prompt("Enter company access code");
+
+if(user===COMPANY_PASS){
+ document.body.style.display="block";
+}else{
+ document.body.innerHTML="<h2 style='text-align:center;margin-top:120px;font-family:Segoe UI'>Access Denied</h2>";
+}
+</script>
+
+<h1>Customer Lookup</h1>
+
+<input id="phone" placeholder="Enter mobile">
+<button onclick="search()">Search</button>
+
+<div id="result"></div>
+
+<script>
+
+// PASTE YOUR EXEC URL BELOW
+const API="https://script.google.com/macros/s/AKfycbxbCsvYxjDQokHsC73xsu7Por7J-CvibdcgW4MA9FUxUtmWuGF0m-lG9U6-4klyZaoKpw/exec";
+
+function search(){
+
+let phone=document.getElementById("phone").value.trim();
+let result=document.getElementById("result");
+
+if(!phone){
+result.innerHTML="<div class='card'>Enter mobile number</div>";
+return;
+}
+
+
+// ===== INSTANT SKELETON UI =====
+result.innerHTML=`
+
+<div class="card">
+
+<h2 style="background:#eee;height:24px;width:200px;margin:auto"></h2>
+<div style="height:18px;background:#eee;width:160px;margin:20px auto"></div>
+
+<table>
+<tr><th>Phone</th><th>Device</th><th>Year</th><th>Month</th><th>Discount</th><th>Price</th></tr>
+
+<tr><td colspan="6" style="padding:40px;color:#888">
+⏳ Loading customer data...
+</td></tr>
+
+</table>
+
+</div>
+
+`;
+
+
+// slight delay for smooth UX
+setTimeout(()=>{
+
+fetch(API+"?phone="+phone)
+.then(r=>r.json())
+.then(data=>{
+
+if(!data.results || data.results.length==0){
+result.innerHTML="<div class='card'>No customer found</div>";
+return;
+}
+
+
+// format discount to %
+data.results.forEach(r=>{
+r[4]=(r[4]*100).toFixed(0)+"%";
+});
+
+let vip=data.total>=5?"<div class='vip'>VIP CUSTOMER</div>":"";
+
+let html=`<div class="card">
+
+${vip}
+
+<h2>Total Purchases: ${data.total}</h2>
+<h3>Total Spend: ₹${data.spend}</h3>
+
+<table>
+<tr>
+<th>Phone</th>
+<th>Device</th>
+<th>Year</th>
+<th>Month</th>
+<th>Discount</th>
+<th>Price</th>
+</tr>`;
+
+data.results.forEach(r=>{
+html+="<tr>"+r.map(x=>"<td>"+x+"</td>").join("")+"</tr>";
+});
+
+html+="</table></div>";
+
+result.innerHTML=html;
+
+})
+.catch(()=>{
+result.innerHTML="<div class='card'>Server connection failed</div>";
+});
+
+},150);
+
+}
+
+</script>
+
+</body>
+</html>
